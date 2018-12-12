@@ -7,86 +7,123 @@ class Autor
 {
     private $conn;       //connexió a la base de dades (PDO)
     private $resposta;   // resposta
-    
+
     public function __CONSTRUCT()
     {
-        $this->conn = Database::getInstance()->getConnection();      
+        $this->conn = Database::getInstance()->getConnection();
         $this->resposta = new Resposta();
     }
-    
-    public function getAll($orderby="id_aut")
+
+    public function getAll($orderby = "id_aut")
     {
-		try
-		{
-			$result = array();                        
-			$stm = $this->conn->prepare("SELECT id_aut,nom_aut,fk_nacionalitat FROM autors ORDER BY $orderby");
-			$stm->execute();
-            $tuples=$stm->fetchAll();
+        try {
+            $result = array();
+            $stm = $this->conn->prepare("SELECT id_aut,nom_aut,fk_nacionalitat FROM autors ORDER BY $orderby");
+            $stm->execute();
+            $tuples = $stm->fetchAll();
             $this->resposta->setDades($tuples);    // array de tuples
-			$this->resposta->setCorrecta(true);       // La resposta es correcta        
+            $this->resposta->setCorrecta(true);       // La resposta es correcta        
             return $this->resposta;
-		}
-        catch(Exception $e)
-		{   // hi ha un error posam la resposta a fals i tornam missatge d'error
-			$this->resposta->setCorrecta(false, $e->getMessage());
+        } catch (Exception $e) {   // hi ha un error posam la resposta a fals i tornam missatge d'error
+            $this->resposta->setCorrecta(false, $e->getMessage());
             return $this->resposta;
-		}
+        }
     }
-    
+
     public function get($id)
     {
-        //TODO
+        $sql = "SELECT id_aut,nom_aut,fk_nacionalitat FROM AUTORS WHERE ID_AUT = $id";
+        $stm = $this->conn->prepare($sql);
+        $stm->execute();
+        $tuples = $stm->fetchAll();
+        $this->resposta->setDades($tuples);    // array de tuples
+        $this->resposta->setCorrecta(true);       // La resposta es correcta       
+        return $this->resposta;
     }
 
-    
+
     public function insert($data)
     {
-		try 
-		{
-                $sql = "SELECT max(id_aut) as N from autors";
-                $stm=$this->conn->prepare($sql);
-                $stm->execute();
-                $row=$stm->fetch();
-                $id_aut=$row["N"]+1;
-                $nom_aut=$data['nom_aut'];
-                $fk_nacionalitat=$data['fk_nacionalitat'];
+        try {
+            $sql = "SELECT max(id_aut) as N from autors";
+            $stm = $this->conn->prepare($sql);
+            $stm->execute();
+            $row = $stm->fetch();
+            $id_aut = $row["N"] + 1;
+            $nom_aut = $data['nom_aut'];
+            $fk_nacionalitat = $data['fk_nacionalitat'];
 
-                $sql = "INSERT INTO autors
+            $sql = "INSERT INTO autors
                             (id_aut,nom_aut,fk_nacionalitat)
                             VALUES (:id_aut,:nom_aut,:fk_nacionalitat)";
-                
-                $stm=$this->conn->prepare($sql);
-                $stm->bindValue(':id_aut',$id_aut);
-                $stm->bindValue(':nom_aut',$nom_aut);
-                $stm->bindValue(':fk_nacionalitat',!empty($fk_nacionalitat)?$fk_nacionalitat:NULL,PDO::PARAM_STR);
-                $stm->execute();
-            
-       	        $this->resposta->setCorrecta(true);
-                return $this->resposta;
+
+            $stm = $this->conn->prepare($sql);
+            $stm->bindValue(':id_aut', $id_aut);
+            $stm->bindValue(':nom_aut', $nom_aut);
+            $stm->bindValue(':fk_nacionalitat', !empty($fk_nacionalitat) ? $fk_nacionalitat : null, PDO::PARAM_STR);
+            $stm->execute();
+
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+        } catch (Exception $e) {
+            $this->resposta->setCorrecta(false, "Error insertant: " . $e->getMessage());
+            return $this->resposta;
         }
-        catch (Exception $e) 
-		{
-                $this->resposta->setCorrecta(false, "Error insertant: ".$e->getMessage());
-                return $this->resposta;
-		}
-    }   
-    
+    }
+
     public function update($data)
     {
-        // TODO
+        try {
+            // Variables
+            $id = $data['ID_AUT'];
+            $nomAutor = $data['nom_aut'];
+            $nacionalitat = $data['fk_nacionalitat'];
+
+            //Sentencia
+            $sql = "UPDATE AUTORS SET NOM_AUT = '$nomAutor', FK_NACIONALITAT = '$nacionalitat' WHERE ID_AUT = $id";
+
+            //Executam la consulta
+            $stm = $this->conn->prepare($sql);
+            $stm->execute();
+
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+        } catch (Exception $e) {
+            $this->resposta->setCorrecta(false, "Error insertant: " . $e->getMessage());
+            return $this->resposta;
+        }
     }
 
-    
-    
+
+
     public function delete($id)
     {
-        // TODO
+        try {
+            //Sentencia
+            $sql = "DELETE FROM AUTORS WHERE ID_AUT = $id";
+            $stm = $this->conn->prepare($sql);
+            $stm->execute();
+
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+        } catch (Exception $e) {
+            $this->resposta->setCorrecta(false, "Error insertant: " . $e->getMessage());
+            return $this->resposta;
+        }
     }
 
-    public function filtra($where,$orderby,$offset,$count)
+    public function filtra($where, $orderby, $offset, $count)
     {
-        // TODO
+        $sql = "SELECT id_aut,nom_aut,fk_nacionalitat FROM AUTORS WHERE $where ORDER BY $orderby LIMIT $offset, $count";
+        $stm = $this->conn->prepare($sql);
+        $stm->execute();
+        $tuples = $stm->fetchAll();
+        $this->resposta->setDades($tuples);
+
+
+        $this->resposta->setCorrecta(true);
+        return $this->resposta;
     }
-    
-          
+
+
 }
